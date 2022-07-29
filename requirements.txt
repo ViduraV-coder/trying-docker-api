@@ -1,0 +1,9 @@
+flask
+flask_mysqldb
+flask-sqlalchemy
+flask-marshmallow
+marshmallow-sqlalchemy
+marshmallow
+redis
+mysql-connector-python
+

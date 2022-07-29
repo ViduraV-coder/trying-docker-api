@@ -1,0 +1,106 @@
+version: '3.8'
+services:
+
+  admin-web:
+    build:
+      context: .
+      dockerfile: web/admin-web/Dockerfile
+    ports:
+      - "81:80"
+    container_name: admin-web
+    volumes:
+      - ./web/admin-web:/var/www/html/
+    depends_on:
+      - adminapi
+
+  user-web1:
+    build:
+      context: .
+      dockerfile: web/user-web/web1/Dockerfile
+    ports:
+      - "82:80"
+    container_name: user-web1
+    volumes:
+      - ./web/user-web:/var/www/html/
+    depends_on:
+      - nginx
+
+  user-web2:
+    build:
+      context: .
+      dockerfile: web/user-web/web2/Dockerfile
+    ports:
+      - "83:80"
+    container_name: user-web2
+    volumes:
+      - ./web/user-web:/var/www/html/
+    depends_on:
+      - nginx
+
+  adminapi:
+    build: 
+      context: .
+      dockerfile: api-admin/Dockerfile
+    ports:
+      - 6000:6000
+    container_name: adminapi
+    volumes:
+      - .:/adminapi
+    depends_on:
+      - db
+      
+  userapi1:
+    build: 
+      context: .
+      dockerfile: api-user/api-user1/Dockerfile
+    ports:
+      - 5001:5001
+    container_name: userapi1
+    volumes:
+      - .:/userapi1
+    depends_on:
+      - db
+
+  userapi2:
+    build: 
+      context: .
+      dockerfile: api-user/api-user2/Dockerfile
+    ports:
+      - 5002:5002
+    container_name: userapi2
+    volumes:
+      - .:/userapi2
+    depends_on:
+      - db
+
+  db:
+    image: mysql:5.7.22
+    restart: always
+    environment:
+      FLASK_ENV: development
+      MYSQL-DATABASE: mydb
+      MYSQL_USER: root
+      MYSQL_PASSWORD: 12345
+      MYSQL_ROOT_PASSWORD: 12345
+    command: --init-file /data/application/init.sql
+    volumes:
+      - ./db/init.sql:/data/application/init.sql
+      - ./db/.dbdata:/var/lib/mysql
+    ports:
+      - 3306:3306
+    container_name: db
+
+  nginx:
+    build: ./nginx
+    ports:
+      - "3000:3000"
+    container_name: nginx
+    depends_on:
+      - userapi1
+      - userapi2
+
+  haproxy:
+    build: ./haproxy
+    container_name: haproxy
+    ports:
+      - "80:80"
